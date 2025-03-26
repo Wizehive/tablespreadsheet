@@ -1398,6 +1398,7 @@ console.log("inside index.js");
         obj.options.parseFormulas == true
       ) {
         value = obj.executeFormula(value, i, j);
+        if(typeof(value) == 'function') value = 'Incorrect Formula'
       }
 
       // Column options
