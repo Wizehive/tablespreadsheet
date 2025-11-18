@@ -8925,10 +8925,23 @@ console.log("inside index.js");
     document.addEventListener("keydown", jexcel.keyDownControls);
   };
 
+  jexcel.isContextMenuOpen = function () {
+    try {
+      return !!(jexcel.current &&
+        jexcel.current.contextMenu &&
+        jexcel.current.contextMenu.classList &&
+        jexcel.current.contextMenu.classList.contains('jcontextmenu-focus'));
+    } catch (e) {
+      return false;
+    }
+  };
+
   /**
    * Events
    */
   jexcel.keyDownControls = function (e) {
+    if (jexcel.isContextMenuOpen()) return;
+
     if (jexcel.current) {
       if (jexcel.current.edition) {
         if (e.which == 27) {
@@ -9201,6 +9214,8 @@ console.log("inside index.js");
   jexcel.isMouseAction = false;
 
   jexcel.mouseDownControls = function (e) {
+    if (jexcel.isContextMenuOpen()) return;
+
     e = e || window.event;
     if (e.buttons) {
       var mouseButton = e.buttons;
@@ -9659,6 +9674,8 @@ console.log("inside index.js");
 
   // Mouse move controls
   jexcel.mouseMoveControls = function (e) {
+    if (jexcel.isContextMenuOpen()) return;
+
     e = e || window.event;
     if (e.buttons) {
       var mouseButton = e.buttons;
@@ -9827,6 +9844,8 @@ console.log("inside index.js");
   };
 
   jexcel.mouseOverControls = function (e) {
+    if (jexcel.isContextMenuOpen()) return;
+
     e = e || window.event;
     if (e.buttons) {
       var mouseButton = e.buttons;
@@ -10079,7 +10098,98 @@ console.log("inside index.js");
             );
             // The id is depending on header and body
             jexcel.current.contextMenu.contextmenu.open(e, items);
-            // Avoid the real one
+
+            // Keyboard nav for context menu
+            (function menuKeys(jTable) {
+              if (!jSuites || !jSuites.contextmenu || !jTable || !jTable.contextMenu || !jTable.contextMenu.contextmenu) return;
+
+              const host = jTable.contextMenu;
+              const contextMenu = host.contextmenu;
+
+              requestAnimationFrame(() => {
+                // Skip header & <hr/> tags
+                const items = Array.from(host.children)
+                  .filter(n => n.tagName === 'DIV' && !n.classList.contains('header'));
+                if (!items.length) return;
+
+                host.setAttribute('role', 'menu');
+
+                // Reassign `tabindex` (first = 0, rest = -1)
+                items.forEach((el, i) => {
+                  el.setAttribute('role', 'menuitem');
+                  el.tabIndex = i === 0 ? 0 : -1;
+                });
+
+                items[0].focus({ preventScroll: true });
+
+                // Key handling (scoped to the menu)
+                let currentIndex = 0;
+                function onKey(event) {
+
+                  function focusIndex(next) {
+                    event.preventDefault()
+
+                    items[currentIndex].tabIndex = -1;
+                    currentIndex = (next + items.length) % items.length;
+
+                    items[currentIndex].tabIndex = 0;
+                    items[currentIndex].focus({ preventScroll: true });
+                  }
+
+                  switch (event.key) {
+                    case 'ArrowDown': 
+                      focusIndex(currentIndex + 1)
+                      break
+                    case 'ArrowUp':
+                      focusIndex(currentIndex - 1)
+                      break
+                    case 'Home':
+                      focusIndex(0)
+                      break;     
+                    case 'End':
+                      focusIndex(items.length - 1)
+                      break
+                    case 'Tab':
+                      focusIndex(currentIndex + (event.shiftKey ? -1 : 1))
+                      break
+                    case 'Enter':
+                    case 'Return':
+                    case ' ':
+                      event.preventDefault();
+                      
+                      const target =
+                        items[currentIndex].querySelector('[onclick]') ||
+                        items[currentIndex].querySelector('a,button') ||
+                        items[currentIndex];
+
+                      ['mousedown', 'mouseup', 'click'].forEach(type =>
+                        target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true }))
+                      );
+
+                      contextMenu.close(false);
+                      break;
+                    case 'Escape':
+                      event.preventDefault();
+                      contextMenu.close(false);
+                      break;
+                    default:
+                      break;
+                  }
+                  
+                  // Prevent table from seeing key inputs while menu is open
+                  event.stopPropagation();
+                }
+
+                host.addEventListener('keydown', onKey, true);
+
+                const closeMenu = contextMenu.close.bind(contextMenu);
+                contextMenu.close = function () {
+                  host.removeEventListener('keydown', onKey, true);
+                  return closeMenu(...arguments);
+                };
+              });
+            })(jexcel.current);
+
             e.preventDefault();
           }
         }
