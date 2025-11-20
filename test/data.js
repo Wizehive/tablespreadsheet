@@ -9,6 +9,7 @@ describe("Data", () => {
         ["Honda Fit", 2009, 3000, "=B3+C3"],
         ["Honda CRV", 2010, 6000, "=B4+C4"],
       ],
+      minDimensions: [4, 4]
     });
 
     test.setValue("D1", "=B1+C1");
