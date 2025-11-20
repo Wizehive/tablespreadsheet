@@ -1866,7 +1866,7 @@ console.log("inside index.js");
             event.stopPropagation();
 
             const items = Array.from(
-              element.parentElement.querySelectorAll(".jexcel_toolbar_item")
+              element.parentElement.querySelectorAll("[data-k]")
             );
 
             const index = items.indexOf(this);
