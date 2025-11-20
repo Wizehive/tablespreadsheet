@@ -7,7 +7,8 @@ describe("Comments", () => {
         ["", "", ""],
         ["", "", ""],
         ["", "", ""],
-      ]
+      ],
+      minDimensions: [3, 3]
     });
 
     test.setComments("A3", "New comment");
