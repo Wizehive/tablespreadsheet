@@ -664,6 +664,7 @@ console.log("inside index.js");
       // Create toolbar object
       obj.toolbar = document.createElement("div");
       obj.toolbar.classList.add("jexcel_toolbar");
+      obj.toolbar.setAttribute("role", "toolbar");
 
       // Create fxBar object
       obj.fxbar = document.createElement("div");
@@ -1835,6 +1836,54 @@ console.log("inside index.js");
       if (obj.options.disableToolbar) {
         obj.toolbar.classList.add("disabled-toolbar");
       }
+
+      function addToolbarKeySupport(element) {
+        if (!element) return;
+
+        element.setAttribute("role", "button");
+
+        if (!element.hasAttribute("tabindex")) {
+          element.tabIndex = 0;
+        }
+
+        element.addEventListener("keydown", function (event) {
+          const key = event.key;
+
+          if (key === "Enter" || key === " ") {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (this.getAttribute("data-disabled") === "disabled") return;
+
+            ["mousedown", "mouseup", "click"].forEach((type) =>
+              this.dispatchEvent(
+                new MouseEvent(type, { bubbles: true, cancelable: true })
+              )
+            )
+          }
+          else if (key === "ArrowLeft" || key === "ArrowRight") {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const items = Array.from(
+              element.parentElement.querySelectorAll("[data-k]")
+            );
+
+            const index = items.indexOf(this);
+            if (index === -1) return;
+
+            let newIndex = key === "ArrowRight" 
+              ? index + 1 
+              : index - 1;
+
+            if (newIndex < 0) newIndex = items.length - 1;
+            if (newIndex >= items.length) newIndex = 0;
+
+            items[newIndex].focus();
+          }
+        });
+      }
+
       for (var i = 0; i < toolbar.length; i++) {
         if (
           toolbar[i].type == "i" &&
@@ -1876,6 +1925,8 @@ console.log("inside index.js");
               obj.setStyle(obj.highlighted, k, v);
             };
           }
+          
+          addToolbarKeySupport(toolbarItem);
         } else if (toolbar[i].type == "i") {
           var toolbarItem = document.createElement("i");
           toolbarItem.classList.add("jexcel_toolbar_item");
@@ -1904,6 +1955,7 @@ console.log("inside index.js");
           }
           // Append element
           toolbarItem.textContent = toolbar[i].content;
+          addToolbarKeySupport(toolbarItem);
           obj.toolbar.appendChild(toolbarItem);
         } else if (toolbar[i].type == "select") {
           var toolbarItem = document.createElement("select");
@@ -1954,6 +2006,7 @@ console.log("inside index.js");
           if (raiseInitialOnChange) {
             toolbarItem.dispatchEvent(new Event("change"));
           }
+          addToolbarKeySupport(toolbarItem);
           obj.toolbar.appendChild(toolbarItem);
 
           // Tooltip
@@ -1989,6 +2042,7 @@ console.log("inside index.js");
           if (toolbar[i].tooltip) {
             toolbarItem.setAttribute("title", toolbar[i].tooltip);
           }
+          addToolbarKeySupport(toolbarItem);
           obj.toolbar.appendChild(toolbarItem);
           toolbarItem.textContent = toolbar[i].content;
           jSuites.color(toolbarItem, {
