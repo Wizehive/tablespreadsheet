@@ -2061,11 +2061,15 @@ console.log("inside index.js");
       input1.className = "cell-indicator";
       input1.readOnly = true;
       input1.value = "";
+      input1.ariaReadOnly = "true";
+      input1.ariaLabel = "Selected cell address";
       obj.fxbar.appendChild(input1);
 
       // Create the second input box with an fx icon
       var input2 = document.createElement("input");
       input2.readOnly = true;
+      input2.ariaReadOnly = "true";
+      input2.ariaLabel = "Selected cell function";
       var fxSpan = document.createElement("span");
       fxSpan.textContent = "fx";
       fxSpan.className = "fx-text";
