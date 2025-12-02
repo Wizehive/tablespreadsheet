@@ -789,6 +789,10 @@ console.log("inside index.js");
       obj.table.setAttribute("cellpadding", "0");
       obj.table.setAttribute("cellspacing", "0");
       obj.table.setAttribute("unselectable", "yes");
+
+      obj.table.setAttribute("role", "table");
+      obj.table.setAttribute("aria-label", 'Spreadsheet Document');
+
       //obj.table.setAttribute('onselectstart', 'return false');
       obj.table.appendChild(obj.colgroupContainer);
       obj.table.appendChild(obj.thead);
@@ -1375,11 +1379,13 @@ console.log("inside index.js");
         index = parseInt(j + 1);
       }
       // Row number label
-      var td = document.createElement("td");
-      td.innerHTML = index;
-      td.setAttribute("data-y", j);
-      td.className = "jexcel_row jexcel-freeze";
-      obj.rows[j].appendChild(td);
+      var th = document.createElement("th");
+      th.innerHTML = index;
+      th.setAttribute("data-y", j);
+      th.className = "jexcel_row jexcel-freeze";
+      th.setAttribute("scope", "row");
+      th.setAttribute("role", "rowheader");
+      obj.rows[j].appendChild(th);
 
       // Data columns
       for (var i = 0; i < obj.options.columns.length; i++) {
@@ -1713,7 +1719,9 @@ console.log("inside index.js");
         : obj.options.defaultColAlign;
 
       // Create header cell
-      obj.headers[colNumber] = document.createElement("td");
+      obj.headers[colNumber] = document.createElement("th");
+      obj.headers[colNumber].setAttribute("scope", "col");
+      obj.headers[colNumber].setAttribute("role", "columnheader");
       if (obj.options.stripHTML) {
         obj.headers[colNumber].textContent = obj.options.columns[colNumber]
           .title
