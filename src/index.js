@@ -1379,13 +1379,13 @@ console.log("inside index.js");
         index = parseInt(j + 1);
       }
       // Row number label
-      var th = document.createElement("th");
-      th.innerHTML = index;
-      th.setAttribute("data-y", j);
-      th.className = "jexcel_row jexcel-freeze";
-      th.setAttribute("scope", "row");
-      th.setAttribute("role", "rowheader");
-      obj.rows[j].appendChild(th);
+      var td = document.createElement("td");
+      td.innerHTML = index;
+      td.setAttribute("data-y", j);
+      td.className = "jexcel_row jexcel-freeze";
+      td.setAttribute("scope", "row");
+      td.setAttribute("role", "rowheader");
+      obj.rows[j].appendChild(td);
 
       // Data columns
       for (var i = 0; i < obj.options.columns.length; i++) {
@@ -1719,7 +1719,7 @@ console.log("inside index.js");
         : obj.options.defaultColAlign;
 
       // Create header cell
-      obj.headers[colNumber] = document.createElement("th");
+      obj.headers[colNumber] = document.createElement("td");
       obj.headers[colNumber].setAttribute("scope", "col");
       obj.headers[colNumber].setAttribute("role", "columnheader");
       if (obj.options.stripHTML) {
