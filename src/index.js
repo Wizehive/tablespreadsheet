@@ -8512,6 +8512,40 @@ console.log("inside index.js");
 
       // Event
       el.setAttribute("tabindex", 1);
+      el.addEventListener("keydown", function (e) {
+        // Shift + F10 is the standard key combination for opening a context menu
+        const isMenuKey =
+          e.key === "ContextMenu" ||
+          (e.shiftKey && (e.key === "F10" || e.code === "F10"));
+
+        if (!isMenuKey) return;
+        if (!jexcel.current || jexcel.current !== obj) return;
+        if (!obj.selectedCell) return;
+
+        const x = parseInt(obj.selectedCell[0], 10);
+        const y = parseInt(obj.selectedCell[1], 10);
+
+        const cell = obj.records?.[y]?.[x];
+        if (!cell) return;
+
+        const rect = cell.getBoundingClientRect();
+
+        const evt = new MouseEvent("contextmenu", {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          clientX: rect.left + 4,
+          clientY: rect.top + 4,
+          button: 2,
+          buttons: 2,
+        });
+
+        cell.dispatchEvent(evt);
+
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
       el.addEventListener("focus", function (e) {
         if (jexcel.current && !obj.selectedCell) {
           obj.updateSelectionFromCoords(0, 0, 0, 0);
@@ -10123,7 +10157,7 @@ console.log("inside index.js");
   };
 
   jexcel.contextMenuControls = function (e) {
-  jexcel.current.dispatch("oncontextmenuclick", jexcel.current.el);
+    jexcel.current.dispatch("oncontextmenuclick", jexcel.current.el);
 
     e = e || window.event;
     if ("buttons" in e) {
@@ -10180,49 +10214,54 @@ console.log("inside index.js");
 
                 host.setAttribute('role', 'menu');
 
-                // Reassign `tabindex` (first = 0, rest = -1)
+                // Ensure items are focusable
                 items.forEach((el, i) => {
                   el.setAttribute('role', 'menuitem');
-                  el.tabIndex = i === 0 ? 0 : -1;
+                  el.setAttribute('tabindex', '-1');
+                  el.setAttribute('aria-selected', 'false');
                 });
 
-                items[0].focus({ preventScroll: true });
-
-                // Key handling (scoped to the menu)
                 let currentIndex = 0;
+
+                function setActive(next) {
+                  const newIndex = (next + items.length) % items.length;
+
+                  items[currentIndex].setAttribute('aria-selected', 'false');
+                  items[currentIndex].classList.remove('kb-active');
+
+                  currentIndex = newIndex;
+
+                  items[currentIndex].setAttribute('aria-selected', 'true');
+                  items[currentIndex].classList.add('kb-active');
+
+                  items[currentIndex].setAttribute('tabindex', '0');
+                  try { items[currentIndex].focus({ preventScroll: true }); } catch {}
+                  items[currentIndex].setAttribute('tabindex', '-1');
+                }
+
+                setActive(0);
+
                 function onKey(event) {
-
-                  function focusIndex(next) {
-                    event.preventDefault()
-
-                    items[currentIndex].tabIndex = -1;
-                    currentIndex = (next + items.length) % items.length;
-
-                    items[currentIndex].tabIndex = 0;
-                    items[currentIndex].focus({ preventScroll: true });
-                  }
-
                   switch (event.key) {
-                    case 'ArrowDown': 
-                      focusIndex(currentIndex + 1)
-                      break
+                    case 'ArrowDown':
+                      event.preventDefault();
+                      setActive(currentIndex + 1);
+                      break;
                     case 'ArrowUp':
-                      focusIndex(currentIndex - 1)
-                      break
+                      event.preventDefault();
+                      setActive(currentIndex - 1);
+                      break;
                     case 'Home':
-                      focusIndex(0)
-                      break;     
+                      event.preventDefault();
+                      setActive(0);
+                      break;
                     case 'End':
-                      focusIndex(items.length - 1)
-                      break
-                    case 'Tab':
-                      focusIndex(currentIndex + (event.shiftKey ? -1 : 1))
-                      break
+                      event.preventDefault();
+                      setActive(items.length - 1);
+                      break;
                     case 'Enter':
-                    case 'Return':
                     case ' ':
                       event.preventDefault();
-                      
                       const target =
                         items[currentIndex].querySelector('[onclick]') ||
                         items[currentIndex].querySelector('a,button') ||
@@ -10241,16 +10280,15 @@ console.log("inside index.js");
                     default:
                       break;
                   }
-                  
                   // Prevent table from seeing key inputs while menu is open
                   event.stopPropagation();
                 }
 
-                host.addEventListener('keydown', onKey, true);
+                document.addEventListener('keydown', onKey, true);
 
                 const closeMenu = contextMenu.close.bind(contextMenu);
                 contextMenu.close = function () {
-                  host.removeEventListener('keydown', onKey, true);
+                  document.removeEventListener('keydown', onKey, true);
                   return closeMenu(...arguments);
                 };
               });
