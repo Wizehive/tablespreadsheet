@@ -10,7 +10,6 @@
 if (!formula && typeof require === "function") {
   var formula = require("@jspreadsheet/formula");
 }
-console.log("inside index.js");
 (function (global, factory) {
   typeof exports === "object" && typeof module !== "undefined"
     ? (module.exports = factory())
@@ -6560,7 +6559,6 @@ console.log("inside index.js");
             if (typeof(res)!='number' && typeof(res)=='object' && res.toString().includes("Error")) return "#ERROR";
           } catch (e) {
             var res = "#ERROR";
-            console.log(e);
           }
 
           return res;
@@ -10681,9 +10679,7 @@ console.log("inside index.js");
   };
 
   jexcel.createFromTable = function (el, options) {
-    if (el.tagName != "TABLE") {
-      console.log("Element is not a table");
-    } else {
+    if (el.tagName == "TABLE") {
       // Configuration
       if (!options) {
         options = {};
